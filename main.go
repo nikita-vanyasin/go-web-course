@@ -1,11 +1,16 @@
 package main
 
 import (
-	"net/http"
+	"context"
 	"github.com/nikita-vanyasin/go-web-course/handlers"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 )
+
+const serverUrl = ":8000"
 
 func main() {
 	log.SetFormatter(&log.JSONFormatter{})
@@ -15,8 +20,35 @@ func main() {
 	}
 	defer file.Close()
 
-	const serverUrl = ":8000"
 	log.WithFields(log.Fields{"url": serverUrl}).Info("Starting the server...")
+
+	killSignalChan := getKillSignalChan()
+	srv := startServer(serverUrl)
+	waitForKillSignal(killSignalChan)
+	srv.Shutdown(context.Background())
+}
+
+func getKillSignalChan() chan os.Signal {
+	osKillSignalChan := make(chan os.Signal, 1)
+	signal.Notify(osKillSignalChan, os.Interrupt, syscall.SIGTERM)
+	return osKillSignalChan
+}
+
+func waitForKillSignal(killSignalChan <-chan os.Signal) {
+	killSignal := <-killSignalChan
+	switch killSignal {
+	case os.Interrupt:
+		log.Info("Got SIGINT")
+	case syscall.SIGTERM:
+		log.Info("Got SIGTERM")
+	}
+}
+
+func startServer(serverUrl string) *http.Server {
 	router := handlers.Router()
-	log.Fatal(http.ListenAndServe(serverUrl, router))
+	srv := &http.Server{Addr: serverUrl, Handler: router}
+	go func() {
+		log.Fatal(srv.ListenAndServe())
+	}()
+	return srv
 }

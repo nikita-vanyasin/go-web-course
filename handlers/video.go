@@ -1,16 +1,34 @@
 package handlers
 
 import (
+	"encoding/json"
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
+	"io"
 	"net/http"
-	"fmt"
 )
 
-func Video(w http.ResponseWriter, _ *http.Request) {
-	fmt.Fprint(w, `{
-    "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
-    "name": "Black Retrospetive Woman",
-    "duration": 15,
-    "thumbnail": "/content/d290f1ee-6c54-4b01-90e6-d701748f0851/screen.jpg",
-    "url": "/content/d290f1ee-6c54-4b01-90e6-d701748f0851/index.mp4"
-  }`)
+func video(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["ID"]
+
+	item := VideoItem{
+		Id:        id,
+		Name:      "Black Retrospective Woman",
+		Duration:  15,
+		Thumbnail: "/content/" + id + "/screen.jpg",
+		Url:       "/content/" + id + "/index.mp4",
+	}
+
+	b, err := json.Marshal(item)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	if _, err = io.WriteString(w, string(b)); err != nil {
+		log.WithField("err", err).Error("error writing response")
+	}
 }
