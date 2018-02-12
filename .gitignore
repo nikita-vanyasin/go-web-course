@@ -1,4 +1,4 @@
 .idea
-content
+content*
 vendor
 *.log

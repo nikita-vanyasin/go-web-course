@@ -15,9 +15,7 @@ import (
 const serverUrl = ":8000"
 
 func main() {
-	// TODO: refactoring
 	// TODO: fix toml dependecies
-	// TODO: retrieve path to content folder from env variable
 	// TODO: remove iso context
 
 	log.SetFormatter(&log.JSONFormatter{})
@@ -26,6 +24,11 @@ func main() {
 		log.SetOutput(file)
 	}
 	defer file.Close()
+
+	contentFolderPath := os.Getenv("CONTENT_FOLDER_PATH")
+	if contentFolderPath == "" {
+		log.Fatal("You need to specify content folder path!")
+	}
 
 	db, err := sql.Open("mysql", `root@/simple_video_server`)
 	if err != nil {
@@ -36,7 +39,7 @@ func main() {
 	log.WithFields(log.Fields{"url": serverUrl}).Info("Starting the server...")
 
 	killSignalChan := getKillSignalChan()
-	srv := startServer(serverUrl, db)
+	srv := startServer(serverUrl, db, contentFolderPath)
 	waitForKillSignal(killSignalChan)
 	srv.Shutdown(context.Background())
 }
@@ -57,8 +60,8 @@ func waitForKillSignal(killSignalChan <-chan os.Signal) {
 	}
 }
 
-func startServer(serverUrl string, db *sql.DB) *http.Server {
-	router := handlers.Router(db)
+func startServer(serverUrl string, db *sql.DB, contentFolderPath string) *http.Server {
+	router := handlers.Router(db, contentFolderPath)
 	srv := &http.Server{Addr: serverUrl, Handler: router}
 	go func() {
 		log.Fatal(srv.ListenAndServe())

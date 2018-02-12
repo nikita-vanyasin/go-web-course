@@ -1,11 +1,7 @@
 package handlers
 
 import (
-	"github.com/nikita-vanyasin/go-web-course/video"
-	"github.com/segmentio/ksuid"
-	"io"
 	"net/http"
-	"os"
 )
 
 func (context *IsoContext) postVideo(w http.ResponseWriter, r *http.Request) {
@@ -21,38 +17,13 @@ func (context *IsoContext) postVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := ksuid.New().String()
-
-	fileName := fileHeader.Filename
-	folderPath := "content/" + id
-
-	err = os.MkdirAll(folderPath, os.ModePerm)
+	item, err := context.VideoStorage.Save(fileHeader.Filename, fileInfo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	file, err := os.OpenFile(folderPath+"/index.mp4", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
-	_, err = io.Copy(file, fileInfo)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var item = video.Item{
-		Id:        id,
-		Name:      fileName,
-		Duration:  0,
-		Thumbnail: "/" + folderPath + "/screen.jpg",
-		Url:       "/" + folderPath + "/index.mp4",
-	}
-	err = context.VideoRepository.Insert(&item)
+	err = context.VideoRepository.Insert(item)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

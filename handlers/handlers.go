@@ -11,12 +11,14 @@ import (
 type IsoContext struct {
 	DB              *sql.DB
 	VideoRepository video.RepositoryInterface
+	VideoStorage    video.StorageInterface
 }
 
-func Router(db *sql.DB) http.Handler {
+func Router(db *sql.DB, contentFolderPath string) http.Handler {
 
 	repo := video.CreateRepository(db)
-	context := IsoContext{db, repo}
+	storage := video.CreateStorage(contentFolderPath)
+	context := IsoContext{db, repo, storage}
 
 	r := mux.NewRouter()
 	s := r.PathPrefix("/api/v1").Subrouter()
