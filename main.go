@@ -15,9 +15,6 @@ import (
 const serverUrl = ":8000"
 
 func main() {
-	// TODO: fix toml dependecies
-	// TODO: remove iso context
-
 	log.SetFormatter(&log.JSONFormatter{})
 	file, err := os.OpenFile("my.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err == nil {
