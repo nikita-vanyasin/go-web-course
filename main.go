@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/nikita-vanyasin/go-web-course/handlers"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -13,6 +15,12 @@ import (
 const serverUrl = ":8000"
 
 func main() {
+	// TODO: retrieve path to content folder from env variable
+	// TODO: fix toml dependecies
+	// TODO: refactoring
+	// TODO: implement list params
+	// TODO: remove iso context
+
 	log.SetFormatter(&log.JSONFormatter{})
 	file, err := os.OpenFile("my.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err == nil {
@@ -20,10 +28,16 @@ func main() {
 	}
 	defer file.Close()
 
+	db, err := sql.Open("mysql", `root@/simple_video_server`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	log.WithFields(log.Fields{"url": serverUrl}).Info("Starting the server...")
 
 	killSignalChan := getKillSignalChan()
-	srv := startServer(serverUrl)
+	srv := startServer(serverUrl, db)
 	waitForKillSignal(killSignalChan)
 	srv.Shutdown(context.Background())
 }
@@ -44,8 +58,8 @@ func waitForKillSignal(killSignalChan <-chan os.Signal) {
 	}
 }
 
-func startServer(serverUrl string) *http.Server {
-	router := handlers.Router()
+func startServer(serverUrl string, db *sql.DB) *http.Server {
+	router := handlers.Router(db)
 	srv := &http.Server{Addr: serverUrl, Handler: router}
 	go func() {
 		log.Fatal(srv.ListenAndServe())

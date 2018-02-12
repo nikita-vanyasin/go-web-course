@@ -5,18 +5,55 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"strconv"
 )
 
-func list(w http.ResponseWriter, _ *http.Request) {
-	item := VideoItem{
-		Id:        "d290f1ee-6c54-4b01-90e6-d701748f0851",
-		Name:      "Black Retrospective Woman",
-		Duration:  15,
-		Thumbnail: "/content/d290f1ee-6c54-4b01-90e6-d701748f0851/screen.jpg",
-		Url:       "/content/d290f1ee-6c54-4b01-90e6-d701748f0851/index.mp4",
+func getParam(r *http.Request, name string) string {
+	return r.URL.Query().Get(name)
+}
+
+func getIntParam(r *http.Request, name string) uint64 {
+	result := uint64(0)
+	if param := getParam(r, name); param != "" {
+		result, _ = strconv.ParseUint(param, 10, 64)
+	}
+	return result
+}
+
+func (context *IsoContext) list(w http.ResponseWriter, r *http.Request) {
+	/*
+		searchStringParam := getParam(r, "searchString")
+		skip := getIntParam(r, "skip")
+		limit := getIntParam(r, "limit")
+	*/
+	db := context.DB
+
+	rows, err := db.Query(`
+       SELECT
+		 video_key as Id,
+         title as Name,
+         duration as Duration,
+         thumbnail_url as Thumbnail,
+         url as Url
+       FROM video
+    `)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var list []VideoItem
+	for rows.Next() {
+		var item VideoItem
+		err := rows.Scan(&item.Id, &item.Name, &item.Duration, &item.Thumbnail, &item.Url)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		list = append(list, item)
 	}
 
-	list := []VideoItem{item}
 	b, err := json.Marshal(list)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

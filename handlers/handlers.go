@@ -1,16 +1,25 @@
 package handlers
 
 import (
+	"database/sql"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
-func Router() http.Handler {
+type IsoContext struct {
+	DB *sql.DB
+}
+
+func Router(db *sql.DB) http.Handler {
+
+	context := IsoContext{db}
+
 	r := mux.NewRouter()
 	s := r.PathPrefix("/api/v1").Subrouter()
-	s.HandleFunc("/list", list).Methods(http.MethodGet)
-	s.HandleFunc("/video/{ID}", video).Methods(http.MethodGet)
+	s.HandleFunc("/list", context.list).Methods(http.MethodGet)
+	s.HandleFunc("/video/{ID}", context.video).Methods(http.MethodGet)
+	s.HandleFunc("/video", context.postVideo).Methods(http.MethodPost)
 	return logMiddleware(r)
 }
 
