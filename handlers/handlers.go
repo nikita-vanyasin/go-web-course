@@ -3,17 +3,20 @@ package handlers
 import (
 	"database/sql"
 	"github.com/gorilla/mux"
+	"github.com/nikita-vanyasin/go-web-course/video"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type IsoContext struct {
-	DB *sql.DB
+	DB              *sql.DB
+	VideoRepository video.RepositoryInterface
 }
 
 func Router(db *sql.DB) http.Handler {
 
-	context := IsoContext{db}
+	repo := video.CreateRepository(db)
+	context := IsoContext{db, repo}
 
 	r := mux.NewRouter()
 	s := r.PathPrefix("/api/v1").Subrouter()

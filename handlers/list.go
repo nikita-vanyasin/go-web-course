@@ -26,32 +26,10 @@ func (context *IsoContext) list(w http.ResponseWriter, r *http.Request) {
 		skip := getIntParam(r, "skip")
 		limit := getIntParam(r, "limit")
 	*/
-	db := context.DB
-
-	rows, err := db.Query(`
-       SELECT
-		 video_key as Id,
-         title as Name,
-         duration as Duration,
-         thumbnail_url as Thumbnail,
-         url as Url
-       FROM video
-    `)
+	list, err := context.VideoRepository.List()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-	defer rows.Close()
-
-	var list []VideoItem
-	for rows.Next() {
-		var item VideoItem
-		err := rows.Scan(&item.Id, &item.Name, &item.Duration, &item.Thumbnail, &item.Url)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		list = append(list, item)
 	}
 
 	b, err := json.Marshal(list)

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/nikita-vanyasin/go-web-course/video"
 	"github.com/segmentio/ksuid"
 	"io"
 	"net/http"
@@ -44,22 +45,15 @@ func (context *IsoContext) postVideo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var item = VideoItem{
+	var item = video.Item{
 		Id:        id,
 		Name:      fileName,
 		Duration:  0,
 		Thumbnail: "/" + folderPath + "/screen.jpg",
 		Url:       "/" + folderPath + "/index.mp4",
 	}
-
-	db := context.DB
-
-	q := `INSERT INTO video ( video_key, title, duration, thumbnail_url,  url)
-         VALUES (?, ?, ?, ?, ?)`
-	rows, err := db.Query(q, item.Id, item.Name, item.Duration, item.Thumbnail, item.Url)
-	if err == nil {
-		rows.Close()
-	} else {
+	err = context.VideoRepository.Insert(&item)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

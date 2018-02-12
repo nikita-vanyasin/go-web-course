@@ -1,6 +1,6 @@
-package handlers
+package video
 
-type VideoItem struct {
+type Item struct {
 	Id        string `json:"id"`
 	Name      string `json:"name"`
 	Duration  int    `json:"duration"`
