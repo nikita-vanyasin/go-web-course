@@ -17,7 +17,6 @@ const serverUrl = ":8000"
 func main() {
 	// TODO: refactoring
 	// TODO: fix toml dependecies
-	// TODO: implement list params
 	// TODO: retrieve path to content folder from env variable
 	// TODO: remove iso context
 

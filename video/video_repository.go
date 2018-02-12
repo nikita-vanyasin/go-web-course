@@ -5,7 +5,7 @@ import (
 )
 
 type RepositoryInterface interface {
-	List() ([]*Item, error)
+	List(searchStringParam string, skip uint64, limit uint64) ([]*Item, error)
 	RetrieveByKey(key string) (*Item, error)
 	Insert(item *Item) error
 }
@@ -20,7 +20,8 @@ func CreateRepository(db *sql.DB) RepositoryInterface {
 	return repo
 }
 
-func (repo *Repository) List() ([]*Item, error) {
+func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64) ([]*Item, error) {
+
 	rows, err := repo.db.Query(`
        SELECT
 		 video_key AS Id,
@@ -28,14 +29,18 @@ func (repo *Repository) List() ([]*Item, error) {
          duration AS Duration,
          thumbnail_url AS Thumbnail,
          url AS Url
-       FROM video
-    `)
+       FROM
+         video
+	   WHERE
+	     title LIKE CONCAT('%', ?, '%')
+	   LIMIT ?, ?
+    `, searchStringParam, skip, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var list []*Item
+	list := make([]*Item, 0)
 	for rows.Next() {
 		var item Item
 		err := rows.Scan(&item.Id, &item.Name, &item.Duration, &item.Thumbnail, &item.Url)

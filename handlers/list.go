@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+const defaultLimit = 10000
+
 func getParam(r *http.Request, name string) string {
 	return r.URL.Query().Get(name)
 }
@@ -21,12 +23,13 @@ func getIntParam(r *http.Request, name string) uint64 {
 }
 
 func (context *IsoContext) list(w http.ResponseWriter, r *http.Request) {
-	/*
-		searchStringParam := getParam(r, "searchString")
-		skip := getIntParam(r, "skip")
-		limit := getIntParam(r, "limit")
-	*/
-	list, err := context.VideoRepository.List()
+	searchStringParam := getParam(r, "searchString")
+	skip := getIntParam(r, "skip")
+	limit := getIntParam(r, "limit")
+	if limit < 1 {
+		limit = defaultLimit
+	}
+	list, err := context.VideoRepository.List(searchStringParam, skip, limit)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
