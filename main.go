@@ -13,10 +13,6 @@ import (
 )
 
 func main() {
-	// TODO: golint + golint in goland
-	// TODO: change mysql collation
-	// TODO: split context and http methods
-
 	file := common.SetupLogging("server")
 	defer file.Close()
 

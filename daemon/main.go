@@ -35,7 +35,7 @@ func taskProvider(stopChan chan struct{}, context *handlers.IsoContext) <-chan *
 			if item != nil {
 				log.Printf("got the task %v\n", item)
 
-				item.Status = video.STATUS_PROCESSING
+				item.Status = video.StatusProcessing
 				err = context.VideoRepository.Update(item)
 				if err != nil {
 					log.Error(err)
@@ -84,7 +84,7 @@ func worker(tasksChan <-chan *video.Item, name int, context *handlers.IsoContext
 	handleError := func(err error, item *video.Item) bool {
 		if err != nil {
 			log.Printf("while processing %v occurred: %v", item, err)
-			item.Status = video.STATUS_ERROR
+			item.Status = video.StatusError
 			anotherErr := context.VideoRepository.Update(item)
 			if anotherErr != nil {
 				log.Error(anotherErr) // TODO: stop all workers???
@@ -108,7 +108,7 @@ func worker(tasksChan <-chan *video.Item, name int, context *handlers.IsoContext
 		}
 
 		item.Duration = int64(duration)
-		item.Status = video.STATUS_READY
+		item.Status = video.StatusReady
 		err = context.VideoRepository.Update(item)
 		if err != nil {
 			log.Error(err) // TODO: stop all workers???

@@ -14,7 +14,7 @@ type IsoContext struct {
 }
 
 func CreateContext(envSettings *common.EnvironmentSettings) *IsoContext {
-	db := common.OpenSqlConnection(envSettings.SqlConnectionString)
+	db := common.OpenSQLConnection(envSettings.SQLConnectionString)
 	repo := video.CreateRepository(db)
 	storage := video.CreateStorage(envSettings.ContentFolderPath)
 	return &IsoContext{VideoRepository: repo, VideoStorage: storage, db: db}

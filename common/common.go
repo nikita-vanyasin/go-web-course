@@ -2,7 +2,7 @@ package common
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // importing driver
 	log "github.com/sirupsen/logrus"
 	"os"
 )
@@ -11,12 +11,12 @@ const defaultServerPort = "8000"
 const logDir = "logs/"
 
 type EnvironmentSettings struct {
-	SqlConnectionString string
+	SQLConnectionString string
 	ContentFolderPath   string
 	ServerPort          string
 }
 
-func OpenSqlConnection(connectionString string) *sql.DB {
+func OpenSQLConnection(connectionString string) *sql.DB {
 	db, err := sql.Open("mysql", connectionString)
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +43,7 @@ func GetEnvSettings() *EnvironmentSettings {
 
 	return &EnvironmentSettings{
 		ContentFolderPath:   contentFolderPath,
-		SqlConnectionString: connectionString,
+		SQLConnectionString: connectionString,
 		ServerPort:          serverPort,
 	}
 }

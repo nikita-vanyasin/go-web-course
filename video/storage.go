@@ -28,7 +28,7 @@ func CreateStorage(contentFolderPath string) StorageInterface {
 
 func (s storage) GetFilePath(item *Item) string {
 	dirPath := path.Dir(s.contentFolderPath)
-	return dirPath + item.Url
+	return dirPath + item.URL
 }
 
 func (s storage) GetThumbnailPath(item *Item) string {
@@ -63,9 +63,9 @@ func (s storage) Save(fileName string, reader io.Reader) (*Item, error) {
 		ID:        id,
 		Name:      fileName,
 		Duration:  0,
-		Status:    STATUS_CREATED,
+		Status:    StatusCreated,
 		Thumbnail: "/" + baseDir + "/" + thumbnailFileName,
-		Url:       "/" + baseDir + "/" + indexFileName,
+		URL:       "/" + baseDir + "/" + indexFileName,
 	}
 	return &item, nil
 }

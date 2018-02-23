@@ -30,7 +30,7 @@ func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64
          title AS Name,
          duration AS Duration,
          thumbnail_url AS Thumbnail,
-         url AS Url,
+         url AS URL,
          status AS Status
        FROM
          video
@@ -38,7 +38,7 @@ func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64
 	     title LIKE CONCAT('%', ?, '%') AND 
 	     NOT status IN (?, ?)
 	   LIMIT ?, ?
-    `, searchStringParam, STATUS_ERROR, STATUS_DELETED, skip, limit)
+    `, searchStringParam, StatusError, StatusDeleted, skip, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64
 	list := make([]*Item, 0)
 	for rows.Next() {
 		var item Item
-		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.Url, &item.Status)
+		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.URL, &item.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -64,7 +64,7 @@ func (repo *Repository) RetrieveByKey(key string) (*Item, error) {
          title AS Name,
          duration AS Duration,
          thumbnail_url AS Thumbnail,
-         url AS Url,
+         url AS URL,
          status AS Status
        FROM
 		video
@@ -77,11 +77,9 @@ func (repo *Repository) RetrieveByKey(key string) (*Item, error) {
 	}
 	defer rows.Close()
 
-	// duplicate!
 	var item *Item
 	for rows.Next() {
-		item = &Item{}
-		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.Url, &item.Status)
+		item, err = populateItem(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +91,7 @@ func (repo *Repository) Insert(item *Item) error {
 	q := `
 		INSERT INTO video (video_key, title, duration, thumbnail_url,  url, status)
         VALUES (?, ?, ?, ?, ?, ?)`
-	rows, err := repo.db.Query(q, item.ID, item.Name, item.Duration, item.Thumbnail, item.Url, item.Status)
+	rows, err := repo.db.Query(q, item.ID, item.Name, item.Duration, item.Thumbnail, item.URL, item.Status)
 	if err == nil {
 		rows.Close()
 	}
@@ -107,7 +105,7 @@ func (repo *Repository) Update(item *Item) error {
 			title = ?, duration = ?, thumbnail_url = ?, url = ?, status = ?
         WHERE video_key = ?
 `
-	rows, err := repo.db.Query(q, item.Name, item.Duration, item.Thumbnail, item.Url, item.Status, item.ID)
+	rows, err := repo.db.Query(q, item.Name, item.Duration, item.Thumbnail, item.URL, item.Status, item.ID)
 	if err == nil {
 		rows.Close()
 	}
@@ -121,14 +119,14 @@ func (repo *Repository) GetUnprocessedItem() (*Item, error) {
          title AS Name,
          duration AS Duration,
          thumbnail_url AS Thumbnail,
-         url AS Url,
+         url AS URL,
          status AS Status
        FROM
 		 video
        WHERE
          status = ?
        LIMIT 1
-    `, STATUS_CREATED)
+    `, StatusCreated)
 	if err != nil {
 		return nil, err
 	}
@@ -136,11 +134,16 @@ func (repo *Repository) GetUnprocessedItem() (*Item, error) {
 
 	var item *Item
 	for rows.Next() {
-		item = &Item{}
-		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.Url, &item.Status)
+		item, err = populateItem(rows)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return item, nil
+}
+
+func populateItem(rows *sql.Rows) (*Item, error) {
+	item := &Item{}
+	err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.URL, &item.Status)
+	return item, err
 }
