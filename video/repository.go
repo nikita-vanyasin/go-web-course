@@ -8,6 +8,8 @@ type RepositoryInterface interface {
 	List(searchStringParam string, skip uint64, limit uint64) ([]*Item, error)
 	RetrieveByKey(key string) (*Item, error)
 	Insert(item *Item) error
+	Update(item *Item) error
+	GetUnprocessedItem() (*Item, error)
 }
 
 type Repository struct {
@@ -24,17 +26,19 @@ func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64
 
 	rows, err := repo.db.Query(`
        SELECT
-		 video_key AS Id,
+		 video_key AS ID,
          title AS Name,
          duration AS Duration,
          thumbnail_url AS Thumbnail,
-         url AS Url
+         url AS Url,
+         status AS Status
        FROM
          video
 	   WHERE
-	     title LIKE CONCAT('%', ?, '%')
+	     title LIKE CONCAT('%', ?, '%') AND 
+	     NOT status IN (?, ?)
 	   LIMIT ?, ?
-    `, searchStringParam, skip, limit)
+    `, searchStringParam, STATUS_ERROR, STATUS_DELETED, skip, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +47,7 @@ func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64
 	list := make([]*Item, 0)
 	for rows.Next() {
 		var item Item
-		err := rows.Scan(&item.Id, &item.Name, &item.Duration, &item.Thumbnail, &item.Url)
+		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.Url, &item.Status)
 		if err != nil {
 			return nil, err
 		}
@@ -56,11 +60,12 @@ func (repo *Repository) List(searchStringParam string, skip uint64, limit uint64
 func (repo *Repository) RetrieveByKey(key string) (*Item, error) {
 	rows, err := repo.db.Query(`
        SELECT
-		 video_key AS Id,
+		 video_key AS ID,
          title AS Name,
          duration AS Duration,
          thumbnail_url AS Thumbnail,
-         url AS Url
+         url AS Url,
+         status AS Status
        FROM
 		video
        WHERE
@@ -72,22 +77,70 @@ func (repo *Repository) RetrieveByKey(key string) (*Item, error) {
 	}
 	defer rows.Close()
 
-	var item Item
+	// duplicate!
+	var item *Item
 	for rows.Next() {
-		err := rows.Scan(&item.Id, &item.Name, &item.Duration, &item.Thumbnail, &item.Url)
+		item = &Item{}
+		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.Url, &item.Status)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return &item, nil
+	return item, nil
 }
 
 func (repo *Repository) Insert(item *Item) error {
-	q := `INSERT INTO video (video_key, title, duration, thumbnail_url,  url)
-        VALUES (?, ?, ?, ?, ?)`
-	rows, err := repo.db.Query(q, item.Id, item.Name, item.Duration, item.Thumbnail, item.Url)
+	q := `
+		INSERT INTO video (video_key, title, duration, thumbnail_url,  url, status)
+        VALUES (?, ?, ?, ?, ?, ?)`
+	rows, err := repo.db.Query(q, item.ID, item.Name, item.Duration, item.Thumbnail, item.Url, item.Status)
 	if err == nil {
 		rows.Close()
 	}
 	return err
+}
+
+func (repo *Repository) Update(item *Item) error {
+	q := `
+		UPDATE video
+		SET 
+			title = ?, duration = ?, thumbnail_url = ?, url = ?, status = ?
+        WHERE video_key = ?
+`
+	rows, err := repo.db.Query(q, item.Name, item.Duration, item.Thumbnail, item.Url, item.Status, item.ID)
+	if err == nil {
+		rows.Close()
+	}
+	return err
+}
+
+func (repo *Repository) GetUnprocessedItem() (*Item, error) {
+	rows, err := repo.db.Query(`
+       SELECT
+		 video_key AS ID,
+         title AS Name,
+         duration AS Duration,
+         thumbnail_url AS Thumbnail,
+         url AS Url,
+         status AS Status
+       FROM
+		 video
+       WHERE
+         status = ?
+       LIMIT 1
+    `, STATUS_CREATED)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var item *Item
+	for rows.Next() {
+		item = &Item{}
+		err := rows.Scan(&item.ID, &item.Name, &item.Duration, &item.Thumbnail, &item.Url, &item.Status)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return item, nil
 }

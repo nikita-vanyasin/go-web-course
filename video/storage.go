@@ -4,6 +4,7 @@ import (
 	"github.com/segmentio/ksuid"
 	"io"
 	"os"
+	"path"
 )
 
 const indexFileName = "index.mp4"
@@ -11,22 +12,36 @@ const thumbnailFileName = "screen.jpg"
 
 type StorageInterface interface {
 	Save(fileName string, writer io.Reader) (*Item, error)
+	GetFilePath(item *Item) string
+	GetThumbnailPath(item *Item) string
 }
 
-type Storage struct {
+type storage struct {
 	contentFolderPath string
 }
 
 func CreateStorage(contentFolderPath string) StorageInterface {
-	storage := new(Storage)
+	storage := new(storage)
 	storage.contentFolderPath = contentFolderPath
 	return storage
 }
 
-func (storage Storage) Save(fileName string, reader io.Reader) (*Item, error) {
+func (s storage) GetFilePath(item *Item) string {
+	dirPath := path.Dir(s.contentFolderPath)
+	return dirPath + item.Url
+}
+
+func (s storage) GetThumbnailPath(item *Item) string {
+	dirPath := path.Dir(s.contentFolderPath)
+	return dirPath + item.Thumbnail
+}
+
+func (s storage) Save(fileName string, reader io.Reader) (*Item, error) {
 
 	id := ksuid.New().String()
-	folderPath := storage.contentFolderPath + "/" + id
+	dirPath := path.Dir(s.contentFolderPath)
+	baseDir := path.Base(s.contentFolderPath) + "/" + id
+	folderPath := dirPath + "/" + baseDir
 
 	err := os.MkdirAll(folderPath, os.ModePerm)
 	if err != nil {
@@ -45,11 +60,12 @@ func (storage Storage) Save(fileName string, reader io.Reader) (*Item, error) {
 	}
 
 	var item = Item{
-		Id:        id,
+		ID:        id,
 		Name:      fileName,
 		Duration:  0,
-		Thumbnail: "/" + folderPath + "/" + thumbnailFileName,
-		Url:       "/" + folderPath + "/" + indexFileName,
+		Status:    STATUS_CREATED,
+		Thumbnail: "/" + baseDir + "/" + thumbnailFileName,
+		Url:       "/" + baseDir + "/" + indexFileName,
 	}
 	return &item, nil
 }

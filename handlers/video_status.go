@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (context *IsoContext) video(w http.ResponseWriter, r *http.Request) {
+func (context *IsoContext) videoStatus(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["ID"]
 
@@ -23,7 +23,11 @@ func (context *IsoContext) video(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := json.Marshal(item)
+	type Response struct {
+		Status int8 `json:"status"`
+	}
+
+	b, err := json.Marshal(Response{Status: item.Status})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

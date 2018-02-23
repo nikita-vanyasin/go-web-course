@@ -13,7 +13,7 @@ func (context *IsoContext) postVideo(w http.ResponseWriter, r *http.Request) {
 
 	contentType := fileHeader.Header.Get("Content-Type")
 	if contentType != "video/mp4" {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "invalid content-type", http.StatusBadRequest)
 		return
 	}
 

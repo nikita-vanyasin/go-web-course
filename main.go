@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/nikita-vanyasin/go-web-course/common"
 	"github.com/nikita-vanyasin/go-web-course/handlers"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -12,31 +12,24 @@ import (
 	"syscall"
 )
 
-const serverUrl = ":8000"
-
 func main() {
-	log.SetFormatter(&log.JSONFormatter{})
-	file, err := os.OpenFile("my.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err == nil {
-		log.SetOutput(file)
-	}
+	// TODO: golint + golint in goland
+	// TODO: change mysql collation
+	// TODO: split context and http methods
+
+	file := common.SetupLogging("server")
 	defer file.Close()
 
-	contentFolderPath := os.Getenv("CONTENT_FOLDER_PATH")
-	if contentFolderPath == "" {
-		log.Fatal("You need to specify content folder path!")
-	}
+	envSettings := common.GetEnvSettings()
+	isoContext := handlers.CreateContext(envSettings)
+	defer isoContext.Shutdown()
 
-	db, err := sql.Open("mysql", `root@/simple_video_server`)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	var serverURL = ":" + envSettings.ServerPort
 
-	log.WithFields(log.Fields{"url": serverUrl}).Info("Starting the server...")
+	log.WithFields(log.Fields{"url": serverURL}).Info("Starting the server...")
 
 	killSignalChan := getKillSignalChan()
-	srv := startServer(serverUrl, db, contentFolderPath)
+	srv := startServer(serverURL, isoContext)
 	waitForKillSignal(killSignalChan)
 	srv.Shutdown(context.Background())
 }
@@ -57,9 +50,9 @@ func waitForKillSignal(killSignalChan <-chan os.Signal) {
 	}
 }
 
-func startServer(serverUrl string, db *sql.DB, contentFolderPath string) *http.Server {
-	router := handlers.Router(db, contentFolderPath)
-	srv := &http.Server{Addr: serverUrl, Handler: router}
+func startServer(serverURL string, isoContext *handlers.IsoContext) *http.Server {
+	router := handlers.Router(isoContext)
+	srv := &http.Server{Addr: serverURL, Handler: router}
 	go func() {
 		log.Fatal(srv.ListenAndServe())
 	}()

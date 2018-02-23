@@ -1,29 +1,17 @@
 package handlers
 
 import (
-	"database/sql"
 	"github.com/gorilla/mux"
-	"github.com/nikita-vanyasin/go-web-course/video"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
-type IsoContext struct {
-	DB              *sql.DB
-	VideoRepository video.RepositoryInterface
-	VideoStorage    video.StorageInterface
-}
-
-func Router(db *sql.DB, contentFolderPath string) http.Handler {
-
-	repo := video.CreateRepository(db)
-	storage := video.CreateStorage(contentFolderPath)
-	context := IsoContext{db, repo, storage}
-
+func Router(context *IsoContext) http.Handler {
 	r := mux.NewRouter()
 	s := r.PathPrefix("/api/v1").Subrouter()
 	s.HandleFunc("/list", context.list).Methods(http.MethodGet)
 	s.HandleFunc("/video/{ID}", context.video).Methods(http.MethodGet)
+	s.HandleFunc("/video/{ID}/status", context.videoStatus).Methods(http.MethodGet)
 	s.HandleFunc("/video", context.postVideo).Methods(http.MethodPost)
 	return logMiddleware(r)
 }

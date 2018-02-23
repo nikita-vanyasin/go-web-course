@@ -1,4 +1,3 @@
-# noinspection SqlNoDataSourceInspectionForFile
 
 DROP TABLE IF EXISTS video;
 CREATE TABLE video
@@ -11,7 +10,9 @@ CREATE TABLE video
   url           VARCHAR(255)        NOT NULL,
   thumbnail_url VARCHAR(255)        NOT NULL DEFAULT '',
   PRIMARY KEY (id)
-);
+)
+  CHARACTER SET utf8
+  COLLATE utf8_general_ci;
 
 INSERT INTO
   video
