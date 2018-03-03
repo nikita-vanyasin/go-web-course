@@ -22,6 +22,10 @@ func OpenSQLConnection(connectionString string) *sql.DB {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return db
 }
 

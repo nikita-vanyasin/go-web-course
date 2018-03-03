@@ -1,0 +1,13 @@
+FROM scratch
+
+ENV CONTENT_FOLDER_PATH /content
+ENV CONNECTION_STRING root@/simple_video_server
+ENV SERVER_PORT 8000
+
+EXPOSE $SERVER_PORT
+
+VOLUME $CONTENT_FOLDER_PATH
+
+COPY go-server /
+
+CMD ["/go-server"]

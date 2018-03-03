@@ -1,0 +1,19 @@
+version: '3'
+services:
+#  server:
+#    build: ./cmd/server
+#    ports:
+#      - "8000:8000"
+#    volumes:
+#      - ${CONTENT_FOLDER_PATH}:/content
+  ffmpeg:
+    image: sjourdan/ffmpeg
+  ffprobe:
+    image: sjourdan/ffprobe
+  daemon:
+    build: ./cmd/daemon
+    volumes:
+      - ${CONTENT_FOLDER_PATH}:/content
+    links:
+      - ffmpeg
+      - ffprobe
