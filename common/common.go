@@ -8,8 +8,6 @@ import (
 )
 
 const defaultServerPort = "8000"
-const logDir = "logs/"
-const logFileExtension = "log"
 
 type EnvironmentSettings struct {
 	SQLConnectionString string
@@ -53,11 +51,6 @@ func GetEnvSettings() *EnvironmentSettings {
 	}
 }
 
-func SetupLogging(logFileName string) *os.File {
+func SetupLogging() {
 	log.SetFormatter(&log.JSONFormatter{})
-	file, err := os.OpenFile(logDir+logFileName+"."+logFileExtension, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
-	if err == nil {
-		log.SetOutput(file)
-	}
-	return file
 }

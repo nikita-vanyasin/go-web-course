@@ -1,6 +1,5 @@
 content*
 vendor
-logs
 build/daemon/go-daemon
 build/server/go-server
 

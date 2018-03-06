@@ -19,7 +19,7 @@ build: vendor
 	CGO_ENABLED=0 GOOS=${GOOS} go build -a -installsuffix cgo -o ${APPSERVER} ${PACKAGESERVER} \
 	&& CGO_ENABLED=0 GOOS=${GOOS} go build -a -installsuffix cgo -o ${APPDAEMON} ${PACKAGEDAEMON}
 
-run: vendor
+run: build
 	CONTENT_FOLDER_PATH=${CURRENTDIR}/content docker-compose up -d
 
 clean:

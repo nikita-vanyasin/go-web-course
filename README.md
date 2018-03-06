@@ -11,6 +11,11 @@ The information is stored in MySQL db.
 Server and daemon is wrapped into separate docker images.
 
 
+### TODO
+- add orchestration, deploy containers on github hook
+- add versioning/tagging on build
+ 
+
 
 
 

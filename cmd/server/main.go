@@ -13,8 +13,7 @@ import (
 )
 
 func main() {
-	file := common.SetupLogging("server")
-	defer file.Close()
+	common.SetupLogging()
 
 	envSettings := common.GetEnvSettings()
 	isoContext := handlers.CreateContext(envSettings)

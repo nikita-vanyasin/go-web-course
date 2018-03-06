@@ -135,8 +135,7 @@ func runWorkerPool(stopChan chan struct{}, context *handlers.IsoContext) *sync.W
 }
 
 func main() {
-	file := common.SetupLogging("daemon")
-	defer file.Close()
+	common.SetupLogging()
 
 	envSettings := common.GetEnvSettings()
 	isoContext := handlers.CreateContext(envSettings)
