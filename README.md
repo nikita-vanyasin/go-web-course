@@ -1,4 +1,4 @@
-## Simple video conversation service written in Go
+## Simple video conversion service written in Go
 
 This repository is for learning purposes only.
 
