@@ -8,13 +8,9 @@ This repository is for learning purposes only.
 
 The information is stored in MySQL db.
 
+Server and daemon is wrapped into separate docker images.
 
-#### Roadmap
-- process files with ffmpeg
-- search for videos by file name
-- run backend as daemon
-- specify database connection params via ENV variable
-- move logs to separate folder
-- wrap backend into docker image
+
+
 
 

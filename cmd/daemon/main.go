@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const poolSize = 3 // TODO: move to env settings
+
 func taskProvider(stopChan chan struct{}, context *handlers.IsoContext) <-chan *video.Item {
 	tasksChan := make(chan *video.Item)
 	go func() {
@@ -87,7 +89,7 @@ func worker(tasksChan <-chan *video.Item, name int, context *handlers.IsoContext
 			item.Status = video.StatusError
 			anotherErr := context.VideoRepository.Update(item)
 			if anotherErr != nil {
-				log.Error(anotherErr) // TODO: stop all workers???
+				log.Error(anotherErr)
 			}
 		}
 		return err != nil
@@ -111,7 +113,7 @@ func worker(tasksChan <-chan *video.Item, name int, context *handlers.IsoContext
 		item.Status = video.StatusReady
 		err = context.VideoRepository.Update(item)
 		if err != nil {
-			log.Error(err) // TODO: stop all workers???
+			log.Error(err)
 		}
 
 		log.Printf("end handle item %v on worker %v\n", item, name)
@@ -122,7 +124,7 @@ func worker(tasksChan <-chan *video.Item, name int, context *handlers.IsoContext
 func runWorkerPool(stopChan chan struct{}, context *handlers.IsoContext) *sync.WaitGroup {
 	var wg sync.WaitGroup
 	tasksChan := runTaskProvider(stopChan, context)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < poolSize; i++ {
 		go func(i int) {
 			wg.Add(1)
 			worker(tasksChan, i, context)

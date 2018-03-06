@@ -1,6 +1,6 @@
 content*
 vendor
 logs
-cmd/daemon/go-daemon
-cmd/server/go-server
+build/daemon/go-daemon
+build/server/go-server
 
